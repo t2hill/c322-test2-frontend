@@ -44,7 +44,7 @@
     </style>
   </head>
   <body>
-    <form onsubmit="add()">
+    <form id="myForm">
       <!-- Question Text -->
       <label for="questionText">Question:</label><br />
       <textarea
@@ -88,6 +88,7 @@
     <script>
       let host = "http://localhost:8080";
       let questions = [];
+
       displayTheQuestions();
 
       async function getAll() {
@@ -129,6 +130,19 @@
         }
       }
 
+      const form = document.getElementById("myForm");
+      form.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        add();
+        form.reset();
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      });
+      
+
+
       function add() {
         let form = document.forms[0];
         let formData = new FormData(form);
@@ -150,6 +164,7 @@
             break;
         }
         question.id = questions.length + 1;
+        question.imageFile = data.imageFile;
         addTheQuestion(question);
       }
 
@@ -164,21 +179,22 @@
           body: JSON.stringify(question),
         };
         try {
-        let response = await fetch(host + "/questions", request);
-        console.log(response);
-        if (response.status == 200) {
-          let result = await submitTheImage(question.id, imageFile);
-          if (result) {
-            message = "The question was added successfully!";
+          let response = await fetch(host + "/questions", request);
+          console.log(response.status);
+          console.log(question.imageFile);
+          if (response.status == 200) {
+            let result = await submitTheImage(question.id, question.imageFile);
+            if (result) {
+              message = "The question was added successfully!";
+            } else {
+              message =
+                "Something went wrong! Question data was saved successfully but question image was not saved.";
+            }
           } else {
-            message =
-              "Something went wrong! Question data was saved successfully but question image was not saved.";
+            console.log(response);
+            message = "Something went wrong! Question data could not be saved.";
           }
-        } else {
-          console.log(response);
-          message = "Something went wrong! Question data could not be saved.";
-        }
-        alert(message);
+          alert(message);
         } catch (error) {
           alert("The following error occurred: \n" + error);
         }
